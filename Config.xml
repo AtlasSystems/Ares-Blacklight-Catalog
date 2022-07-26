@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Name>Ares Blacklight Catalog</Name>
+  <Author>Atlas Systems, Inc.</Author>
+  <Version>1.0.0</Version>
+  <Active>True</Active>
+  <Type>Addon</Type>
+  <Description>Searches the Blacklight catalog and imports citation information into Ares.</Description>
+  <Forms>
+    <Form>FormItem</Form>
+  </Forms>
+  <Settings>
+    <Setting name="BaseUrl" value="" type="string">
+      <Description>The base URL for the Blacklight catalog. Default: blank</Description>
+    </Setting>
+    <Setting name="AdvancedSearchUrl" value="" type="string">
+      <Description>The URL for the Blacklight catalog's advanced search page. Default: blank</Description>
+    </Setting>
+    <Setting name="AutoSearch" value="True" type="Boolean">
+      <Description>Defines whether the search should be automatically performed when the form opens. Default: True</Description>
+    </Setting>
+    <Setting name="SearchPriority" value="barcode,call number,isxn,title" type="string">
+      <Description>The type of search to automatically run in order of search priority and separated by a comma. The valid search types are barcode, isxn, callnumber, and title. Default: barcode,call number,isxn,title</Description>
+    </Setting>
+    <Setting name="AutoRetrieveItems" value="True" type="Boolean">
+      <Description>Defines whether the addon should automaticaly retrieve items related to a record being viewed. Default: True</Description>
+    </Setting>
+    <Setting name="KeepOriginalIsxn" value="True" type="Boolean">
+      <Description>Defines whether or not to overwrite the ISXN field when importing. Default: True</Description>
+    </Setting>
+    <Setting name="EResourceIndicator" value="is_electronic_holding=true" type="string">
+      <Description>The bib-level catalog XML field and value that indicates a record can be accessed electronically. A row in the grid will be created with a link to the resource if possible. Leave blank if you do not wish to use this feature. Format is the XML field name and that field's value when a record is an electronic resource, separated by an =. Default: is_electronic_holding=true</Description>
+    </Setting>
+    <Setting name="EResourceLinkField" value="link=Location" type="string">
+      <Description>The bib-level catalog XML field that contains the link for an electronic resource and the Ares field it should be imported to. Format is the XML field name and the Ares field separated by an =. Default: link=Location</Description>
+    </Setting>
+    <Setting name="CombinedImportFields" value="library=location=ShelfLocation" type="string">
+      <Description>A list of item-level XML fields that should be combined when importing and their corresponding Ares fields. Format is [first XML field]=[second XML field]=[Ares field] with each set separated by a comma. Fields will be concatenated with a space between them. Do not define these fields in the ItemImportFields table in DataMapping.lua. Default: library=location=ShelfLocation</Description>
+    </Setting>
+    <Setting name="DisplayInvalidSearchMessage" value="False" type="Boolean">
+      <Description>Defines whether or not the addon should display a message when an invalid search is performed by clicking a ribbon button. Default: False</Description>
+    </Setting>
+    <Setting name="RemoveTrailingSpecialCharacters" value="True" type="Boolean">
+      <Description>Defines whether to remove trailing special characters on import or not. The included special characters are: \ / + , ; : - = . Default: True</Description>
+    </Setting>
+  </Settings>
+  <Files>
+    <File>BlacklightCatalog.lua</File>     
+  </Files>
+</Configuration>
