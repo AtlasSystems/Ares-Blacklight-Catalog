@@ -79,18 +79,18 @@ HostAppInfo.CatalogLevels["Item"] = "item";
 
 -- Bib-level fields to display in the bib grid. The key is the column display name, and the 
 -- values are the corresponding catalog XML field. These values must be at the bib level in 
--- the catalog XML record.
+-- the catalog XML record. Fields can be added to this section or removed as desired.
 HostAppInfo.BibGridFields["Title"] = "title";
 HostAppInfo.BibGridFields["Edition"] = "edition";
 
 -- Holding-level fields to display in the item grid. The key is the column display name, and 
 -- the values are the corresponding catalog XML field. These values must be at the holding 
--- level in the catalog XML record.
+-- level in the catalog XML record. Fields can be added to this section or removed as desired.
 HostAppInfo.ItemGridHoldingFields["Call #"] = "call_number";
 
 -- Item-level fields to display in the item grid. The key is the column display name, and the 
 -- values are the corresponding catalog XML field. These values must be at the item level in 
--- the catalog XML record.
+-- the catalog XML record. Fields can be added to this section or removed as desired.
 HostAppInfo.ItemGridItemFields["Location"] = "location";
 HostAppInfo.ItemGridItemFields["Barcode"] = "barcode";
 HostAppInfo.ItemGridItemFields["Status"] = "status";
@@ -98,7 +98,7 @@ HostAppInfo.ItemGridItemFields["Volume/Issue"] = "volume_or_issue";
 
 -- Bib-level fields to import. The key is the name of the catalog XML field, and the value is 
 -- the name of the Ares Item field to import to. Must be at the bib level in the XML catalog 
--- record.
+-- record. Fields can be added to this section or removed as desired.
 HostAppInfo.BibImportFields["title"] = "Title";
 HostAppInfo.BibImportFields["author"] = "Author";
 HostAppInfo.BibImportFields["edition"] = "Edition";
@@ -110,18 +110,19 @@ HostAppInfo.BibImportFields["barcode"] = "ItemBarcode";
 
 -- Holding-level fields to import. The key is the name of the catalog XML field, and the 
 -- value is the name of the Ares Item field to import to. Must be at the holding level in the 
--- catalog XML record.
+-- catalog XML record. Fields can be added to this section or removed as desired.
 HostAppInfo.HoldingImportFields["call_number"] = "CallNumber";
 
 -- Item-level fields to import. The key is the name of the catalog XML field, and the value is
 -- the name of the Ares Item field to import to. Must be at the item level in the catalog XML
--- record.
+-- record. Fields can be added to this section or removed as desired.
 HostAppInfo.ItemImportFields["barcode"] = "Barcode";
 
 -- Alternate statuses to display in the grid. For example, if you want to display a status of
 -- "Item on Shelf" as "Available" and other statuses as "Not Available." The key is the status
 -- displayed in the catalog XML record and the value is the status you want displayed in the
--- grid instead. The XML field must be named "status" for this to work.
+-- grid instead. The XML field must be named "status" for this to work. Fields can be added
+-- to this section or removed as desired.
 HostAppInfo.DisplayStatuses["Item in place"] = "Available";
 
 return HostAppInfo;
