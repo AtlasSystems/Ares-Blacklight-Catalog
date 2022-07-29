@@ -140,19 +140,7 @@ function AutoSearch()
 	for i = 1, #priorityList do
 		local searchType = priorityList[i]:lower();
 
-		if searchType == "barcode" then
-			if TrySearch(searchType) then
-				break;
-			end
-		elseif searchType == "isxn" then
-			if TrySearch(searchType) then
-				break;
-			end
-		elseif searchType == "title" then
-			if TrySearch(searchType) then
-				break;
-			end
-		elseif searchType == "call number" then
+		if searchType == "barcode" or searchType == "isxn" or searchType == "title" or searchType == "call number" then
 			if TrySearch(searchType) then
 				break;
 			end
@@ -382,6 +370,7 @@ function RetrieveItems()
 
 	CatalogForm.BibGrid.GridControl.DataSource = BuildBibDataSource(xmlRecord);
 	CatalogForm.ItemsGrid.GridControl.DataSource = BuildItemsDataSource(xmlRecord);
+
 	CatalogForm.BibGrid.GridControl:EndUpdate();
 	CatalogForm.ItemsGrid.GridControl:EndUpdate();
 

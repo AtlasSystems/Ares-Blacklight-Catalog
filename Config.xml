@@ -20,7 +20,7 @@
       <Description>Defines whether the search should be automatically performed when the form opens. Default: True</Description>
     </Setting>
     <Setting name="SearchPriority" value="barcode,call number,isxn,title" type="string">
-      <Description>The type of search to automatically run in order of search priority and separated by a comma. The valid search types are barcode, isxn, callnumber, and title. Default: barcode,call number,isxn,title</Description>
+      <Description>The type of search to automatically run in order of search priority and separated by a comma. The valid search types are barcode, isxn, call number, and title. Default: barcode,call number,isxn,title</Description>
     </Setting>
     <Setting name="AutoRetrieveItems" value="True" type="Boolean">
       <Description>Defines whether the addon should automaticaly retrieve items related to a record being viewed. Default: True</Description>

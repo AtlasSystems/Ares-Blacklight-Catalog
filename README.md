@@ -26,7 +26,7 @@ Defines whether the search should be automatically performed when the form opens
 
 **SearchPriority (string)**
 
-The type of search to automatically run in order of search priority and separated by a comma. The valid search types are barcode, isxn, callnumber, and title. Default: barcode,call number,isxn,title
+The type of search to automatically run in order of search priority and separated by a comma. The valid search types are barcode, isxn, call number, and title. Default: barcode,call number,isxn,title
 
 **AutoRetrieveItems (Boolean)**
 
