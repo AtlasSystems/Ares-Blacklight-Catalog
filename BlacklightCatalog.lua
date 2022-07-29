@@ -364,15 +364,15 @@ function RetrieveItems()
 	log:Debug("Retrieving items");
 
 	local xmlRecord = DownloadString(tostring(CatalogForm.Browser.Address) .. ".xml");
-	
-	CatalogForm.BibGrid.GridControl:BeginUpdate();
-	CatalogForm.ItemsGrid.GridControl:BeginUpdate();
+
+	CatalogForm.BibGrid.GridControl.MainView:BeginDataUpdate();
+	CatalogForm.ItemsGrid.GridControl.MainView:BeginDataUpdate();
 
 	CatalogForm.BibGrid.GridControl.DataSource = BuildBibDataSource(xmlRecord);
 	CatalogForm.ItemsGrid.GridControl.DataSource = BuildItemsDataSource(xmlRecord);
 
-	CatalogForm.BibGrid.GridControl:EndUpdate();
-	CatalogForm.ItemsGrid.GridControl:EndUpdate();
+	CatalogForm.BibGrid.GridControl.MainView:EndDataUpdate();
+	CatalogForm.ItemsGrid.GridControl.MainView:EndDataUpdate();
 
 	CatalogForm.BibGrid.GridControl.Enabled = true;
 	CatalogForm.ItemsGrid.GridControl.Enabled = true;
@@ -416,14 +416,14 @@ end
 
 function ClearItems()
 	log:Debug("Clearing Items");
-	CatalogForm.BibGrid.GridControl:BeginUpdate();
-	CatalogForm.ItemsGrid.GridControl:BeginUpdate();
+	CatalogForm.BibGrid.GridControl.MainView:BeginDataUpdate();
+	CatalogForm.ItemsGrid.GridControl.MainView:BeginDataUpdate();
 
 	CatalogForm.ItemsGrid.GridControl.DataSource = CreateItemsTable();
 	CatalogForm.BibGrid.GridControl.DataSource = CreateBibTable();
 
-	CatalogForm.BibGrid.GridControl:EndUpdate();
-	CatalogForm.ItemsGrid.GridControl:EndUpdate();
+	CatalogForm.BibGrid.GridControl.MainView:EndDataUpdate();
+	CatalogForm.ItemsGrid.GridControl.MainView:EndDataUpdate();
 end
 
 function BuildBibDataSource(xmlRecord)
