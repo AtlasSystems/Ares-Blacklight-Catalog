@@ -511,21 +511,19 @@ function BuildItemsDataSource(xmlRecord)
 					end
 					for catalogField, aresField in pairs(HostAppInfo.ItemImportFields) do
 						itemRow:set_Item(aresField, GetInnerXml(items[j], catalogField)[1]);
+					end
 
-						for k = 1, #Settings.CombinedImportFields do
-							local firstField, secondField, importField = Settings.CombinedImportFields[k]:match("(.+)=(.+)=(.+)");
+					for k = 1, #Settings.CombinedImportFields do
+						local firstField, secondField, importField = Settings.CombinedImportFields[k]:match("(.+)=(.+)=(.+)");
 
-							if catalogField == firstField or catalogField == secondField then
-								local combinedFields = SetNilToEmpty(GetInnerXml(items[j], firstField)[1]) .. " " .. SetNilToEmpty(GetInnerXml(items[j], secondField)[1]);
+						local combinedFields = SetNilToEmpty(GetInnerXml(items[j], firstField)[1]) .. " " .. SetNilToEmpty(GetInnerXml(items[j], secondField)[1]);
 
-								if itemRow.Table.Columns:Contains(importField) then
-									itemRow:set_Item(importField, combinedFields);
-								else
-									-- Create column if it doesn't already exist.
-									itemsDataTable.Columns:Add(importField);
-									itemRow:set_Item(importField, combinedFields);
-								end
-							end
+						if itemRow.Table.Columns:Contains(importField) then
+							itemRow:set_Item(importField, combinedFields);
+						else
+							-- Create column if it doesn't already exist.
+							itemsDataTable.Columns:Add(importField);
+							itemRow:set_Item(importField, combinedFields);
 						end
 					end
 
@@ -567,6 +565,11 @@ function DoItemImport()
 	end
 
 	for catalogField, aresField in pairs(HostAppInfo.ItemImportFields) do
+		SetFieldValue("Item", aresField, Cleanup(importItemRow:get_Item(aresField)));
+	end
+
+	for i = 1, #Settings.CombinedImportFields do
+		local aresField = Settings.CombinedImportFields[i]:match(".+=.+=(.+)");
 		SetFieldValue("Item", aresField, Cleanup(importItemRow:get_Item(aresField)));
 	end
 
