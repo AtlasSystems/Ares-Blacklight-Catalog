@@ -2,7 +2,7 @@
 <Configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <Name>Ares Blacklight Catalog</Name>
   <Author>Atlas Systems, Inc.</Author>
-  <Version>1.0.0</Version>
+  <Version>1.0.1</Version>
   <Active>True</Active>
   <Type>Addon</Type>
   <Description>Searches the Blacklight catalog and imports citation information into Ares.</Description>
