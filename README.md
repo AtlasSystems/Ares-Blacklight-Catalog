@@ -14,7 +14,7 @@ To use this addon, your Blacklight catalog records must have XML documents acces
 
 **BaseUrl (string)**
 
-The base URL for the Blacklight catalog. Default: blank
+The base URL for the Blacklight catalog. This is the portion of the URL to the left of the ? when you perform a search. Default: blank
 
 **AdvancedSearchUrl (string)**
 

@@ -11,7 +11,7 @@
   </Forms>
   <Settings>
     <Setting name="BaseUrl" value="" type="string">
-      <Description>The base URL for the Blacklight catalog. Default: blank</Description>
+      <Description>The base URL for the Blacklight catalog. This is the portion of the URL to the left of the ? when you perform a search. Default: blank</Description>
     </Setting>
     <Setting name="AdvancedSearchUrl" value="" type="string">
       <Description>The URL for the Blacklight catalog's advanced search page. Default: blank</Description>
