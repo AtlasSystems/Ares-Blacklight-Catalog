@@ -294,6 +294,7 @@ function BuildBibGrid()
 		bibGridColumn = bibGridView.Columns:AddVisible("grid" .. catalogField, caption);
 		bibGridColumn.Name = "bibGridColumn" .. caption;
 		bibGridColumn.OptionsColumn.ReadOnly = true;
+		bibGridColumn.OptionsColumn.AllowFocus = false;
 	end
 
 	bibGridControl:EndUpdate();
@@ -336,11 +337,11 @@ function BuildItemsGrid()
 	end
 
 	if NotNilOrBlank(Settings.EResourceLinkField) then
-		local gridField = Settings.EResourceLinkField:match(".+=(.+)=");
+		local gridColumnName = Settings.EResourceLinkField:match(".+=(.+)=");
 
-		if not itemsGridView.Columns:ColumnByName("itemsGridColumn" .. gridField) then
-			itemsGridColumn = itemsGridView.Columns:AddVisible("grid" .. gridField, gridField);
-			itemsGridColumn.Name = "itemsGridColumn" .. gridField;
+		if not itemsGridView.Columns:ColumnByName("itemsGridColumn" .. gridColumnName) then
+			itemsGridColumn = itemsGridView.Columns:AddVisible("grid" .. gridColumnName, gridColumnName);
+			itemsGridColumn.Name = "itemsGridColumn" .. gridColumnName;
 			itemsGridColumn.OptionsColumn.ReadOnly = true;
 		end
 	end
@@ -354,12 +355,12 @@ function GridFocusedRowChanged(sender, args)
 	if args.FocusedRowHandle > -1 then
 		CatalogForm.ImportButton.BarButton.Enabled = true;
 
-		local gridField = Settings.EResourceLinkField:match(".+=(.+)=");
+		local gridColumnName = Settings.EResourceLinkField:match(".+=(.+)=");
 
 		local itemRow = CatalogForm.ItemsGrid.GridControl.MainView:GetFocusedRow();
 
-		local eResourceUrl = itemRow:get_Item("grid" .. gridField);
-		if eResourceUrl:find("https?://.+") then
+		local eResourceUrl = itemRow:get_Item("grid" .. gridColumnName);
+		if tostring(eResourceUrl):find("https?://.+") then
 			CatalogForm.EResourceLinkButton.BarButton.Enabled = true;
 		else
 			CatalogForm.EResourceLinkButton.BarButton.Enabled = false;
@@ -422,10 +423,10 @@ function CreateItemsTable()
 	end
 
 	if NotNilOrBlank(Settings.EResourceLinkField) then
-		local gridName, aresField = Settings.EResourceLinkField:match(".+=(.+)=(.+)");
+		local gridColumnName, aresField = Settings.EResourceLinkField:match(".+=(.+)=(.+)");
 
-		if not itemsTable.Columns:Contains("grid" .. gridName) then
-			itemsTable.Columns:Add("grid" .. gridName);
+		if not itemsTable.Columns:Contains("grid" .. gridColumnName) then
+			itemsTable.Columns:Add("grid" .. gridColumnName);
 		end
 
 		if not itemsTable.Columns:Contains(aresField) then
@@ -591,11 +592,11 @@ function DoItemImport()
 		SetFieldValue("Item", aresField, Cleanup(importItemRow:get_Item(aresField)));
 	end
 
-	if Settings.EResourceLinkField then
-		local eResourceGridColumn, eResourceAresField = Settings.EResourceLinkField:match(".+=(.+)=(.+)");
+	if NotNilOrBlank(Settings.EResourceLinkField) then
+		local aresField = Settings.EResourceLinkField:match(".+=.+=(.+)");
 
-		if importItemRow:get_Item("grid" .. eResourceGridColumn):find("https?://.+") then
-			SetFieldValue("Item", eResourceAresField, Cleanup(importItemRow:get_Item(eResourceAresField)));
+		if tostring(importItemRow:get_Item(aresField)):find("https?://.+") then
+			SetFieldValue("Item", aresField, Cleanup(importItemRow:get_Item(aresField)));
 		end
 	end
 	
@@ -610,10 +611,10 @@ end
 function OpenEResourceLink()
 	log:Debug("Opening e-resource link in default browser.");
 
-	local eResourceLinkColumn = Settings.EResourceLinkField:match(".+=(.+)");
+	local gridColumnName = Settings.EResourceLinkField:match(".+=(.+)=");
 
 	local itemRow = CatalogForm.ItemsGrid.GridControl.MainView:GetFocusedRow();
-	local url = itemRow:get_Item("grid" .. eResourceLinkColumn);
+	local url = itemRow:get_Item("grid" .. gridColumnName);
 
 	local process = Types["System.Diagnostics.Process"]();
 	process.StartInfo.FileName = url;

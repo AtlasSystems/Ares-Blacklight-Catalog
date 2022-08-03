@@ -2,7 +2,7 @@
 
 ## Summary
 
-This addon searches the Blacklight catalog and imports values from catalog records into Ares. Retrieved catalog records are displayed in two grids along with the browser; one grid with the bib-level data on the left and the other with item-level records for importing on right. Records can be imported into Ares by highlighting a row in the item grid and clicking the Import button. The selected record can also be imported by pressing Ctrl+I. 
+This addon searches the Blacklight catalog and imports values from catalog records into Ares. Retrieved catalog records are displayed in two grids along with the browser; one grid with the bib-level data on the left and the other with item-level records for importing on right. Records can be imported into Ares by highlighting a row in the item grid and clicking the Import button. The selected record can also be imported by pressing Ctrl+I. If the *EResourceIndicator* setting is being used, selecting the row with the electronic resource URL will enable the Open Electronic Resource button which navigates to the electronic resource URL in the user's default browser.
 
 # Data Mapping
 The icons for the buttons used by the addon, Blacklight search fields used for each search type, fields to display in the grids, fields to be imported into Ares, and alternate statuses to be displayed in the grid are all configurable in the addon's DataMapping.lua file. Instructions for configuring each section are written as comments in the file.
