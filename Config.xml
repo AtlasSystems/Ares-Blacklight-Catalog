@@ -5,7 +5,7 @@
   <Version>1.0.1</Version>
   <Active>True</Active>
   <Type>Addon</Type>
-  <Description>Searches the Blacklight catalog and imports citation information into Ares.</Description>
+  <Description>Searches the Blacklight catalog and imports citation information into Ares. See Readme for detailed configuration instructions.</Description>
   <Forms>
     <Form>FormItem</Form>
   </Forms>
@@ -31,8 +31,8 @@
     <Setting name="EResourceIndicator" value="is_electronic_holding=true" type="string">
       <Description>The bib-level catalog XML field and value that indicates a record can be accessed electronically. A row in the grid will be created with a link to the resource if possible. Leave blank if you do not wish to use this feature. Format is the XML field name and that field's value when a record is an electronic resource, separated by an =. Default: is_electronic_holding=true</Description>
     </Setting>
-    <Setting name="EResourceLinkField" value="link=Location" type="string">
-      <Description>The bib-level catalog XML field that contains the link for an electronic resource and the Ares field it should be imported to. Format is the XML field name and the Ares field separated by an =. Default: link=Location</Description>
+    <Setting name="EResourceLinkField" value="link=Location=Location" type="string">
+      <Description>The bib-level catalog XML field that contains the link for an electronic resource and the Ares field it should be imported to. Format is the XML field name, grid column display name, and Ares field to import to each separated by a =. Both the column display name and Ares field can match item-level keys and values, respectively, in DataMapping. Default: link=Location=Location</Description>
     </Setting>
     <Setting name="CombinedImportFields" value="library=location=ShelfLocation" type="string">
       <Description>A list of item-level XML fields that should be combined when importing and their corresponding Ares fields. Format is [first XML field]=[second XML field]=[Ares field] with each set separated by a comma. Fields will be concatenated with a space between them. Do not define these fields in the ItemImportFields table in DataMapping.lua. Default: library=location=ShelfLocation</Description>

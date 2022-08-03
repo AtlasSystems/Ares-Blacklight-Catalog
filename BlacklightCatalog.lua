@@ -335,6 +335,16 @@ function BuildItemsGrid()
 		itemsGridColumn.OptionsColumn.ReadOnly = true;
 	end
 
+	if NotNilOrBlank(Settings.EResourceLinkField) then
+		local gridField = Settings.EResourceLinkField:match(".+=(.+)=");
+
+		if not itemsGridView.Columns:ColumnByName("itemsGridColumn" .. gridField) then
+			itemsGridColumn = itemsGridView.Columns:AddVisible("grid" .. gridField, gridField);
+			itemsGridColumn.Name = "itemsGridColumn" .. gridField;
+			itemsGridColumn.OptionsColumn.ReadOnly = true;
+		end
+	end
+
 	itemsGridControl:EndUpdate();
 	
 	itemsGridView:add_FocusedRowChanged(GridFocusedRowChanged);
@@ -344,11 +354,11 @@ function GridFocusedRowChanged(sender, args)
 	if args.FocusedRowHandle > -1 then
 		CatalogForm.ImportButton.BarButton.Enabled = true;
 
-		local eResourceLinkField = Settings.EResourceLinkField:match(".+=(.+)");
+		local gridField = Settings.EResourceLinkField:match(".+=(.+)=");
 
 		local itemRow = CatalogForm.ItemsGrid.GridControl.MainView:GetFocusedRow();
-		local eResourceUrl = itemRow:get_Item("grid" .. eResourceLinkField);
-		
+
+		local eResourceUrl = itemRow:get_Item("grid" .. gridField);
 		if eResourceUrl:find("https?://.+") then
 			CatalogForm.EResourceLinkButton.BarButton.Enabled = true;
 		else
@@ -357,7 +367,7 @@ function GridFocusedRowChanged(sender, args)
 	else
 		CatalogForm.ImportButton.BarButton.Enabled = false;
 		CatalogForm.EResourceLinkButton.BarButton.Enabled = false;
-	end;
+	end
 end
 
 function RetrieveItems()
@@ -410,6 +420,18 @@ function CreateItemsTable()
 	for catalogField, aresField in pairs(HostAppInfo.ItemImportFields) do
 		itemsTable.Columns:Add(aresField);
 	end
+
+	if NotNilOrBlank(Settings.EResourceLinkField) then
+		local gridName, aresField = Settings.EResourceLinkField:match(".+=(.+)=(.+)");
+
+		if not itemsTable.Columns:Contains("grid" .. gridName) then
+			itemsTable.Columns:Add("grid" .. gridName);
+		end
+
+		if not itemsTable.Columns:Contains(aresField) then
+			itemsTable.Columns:Add(aresField);
+		end
+	end
 		
 	return itemsTable;
 end
@@ -455,21 +477,15 @@ function BuildItemsDataSource(xmlRecord)
 
 	if NotNilOrBlank(Settings.EResourceIndicator) then
 		local eResourceField, isEResource = Settings.EResourceIndicator:match("(.+)=(.+)");
-		local linkXmlField, linkImportField = Settings.EResourceLinkField:match("(.+)=(.+)");
+		local linkXmlField, gridColumnName, linkImportField = Settings.EResourceLinkField:match("(.+)=(.+)=(.+)");
 
 		if GetInnerXml(xmlRecord, eResourceField)[1] == isEResource then
+			log:Debug("Electronic resource found. Adding item row for URL.")
 			local itemRow = itemsDataTable:NewRow();
 
-			if itemRow.Table.Columns:Contains("grid" .. linkImportField) then
-				itemRow:set_Item("grid" .. linkImportField, GetInnerXml(xmlRecord, linkXmlField)[1]);
+			itemRow:set_Item("grid" .. gridColumnName, GetInnerXml(xmlRecord, linkXmlField)[1]);
+			itemRow:set_Item(linkImportField, GetInnerXml(xmlRecord, linkXmlField)[1]);
 
-				if itemRow.Table.Columns:Contains(linkImportField) then 
-					itemRow:set_Item(linkImportField, GetInnerXml(xmlRecord, linkXmlField)[1]);
-				else
-					itemsDataTable.Columns:Add(linkImportField);
-					itemRow:set_Item(linkImportField, GetInnerXml(xmlRecord, linkXmlField)[1]);
-				end
-			end
 			itemsDataTable.Rows:Add(itemRow);
 		end
 	end
@@ -492,6 +508,7 @@ function BuildItemsDataSource(xmlRecord)
 					for caption, catalogField in pairs(HostAppInfo.ItemGridHoldingFields) do
 						itemRow:set_Item("grid" .. catalogField, GetInnerXml(holdings[i], catalogField)[1]);
 					end
+
 					for catalogField, aresField in pairs(HostAppInfo.HoldingImportFields) do
 						itemRow:set_Item(aresField, GetInnerXml(holdings[i], catalogField)[1]);
 					end
@@ -509,6 +526,7 @@ function BuildItemsDataSource(xmlRecord)
 							itemRow:set_Item("grid" .. catalogField, GetInnerXml(items[j], catalogField)[1]);
 						end
 					end
+
 					for catalogField, aresField in pairs(HostAppInfo.ItemImportFields) do
 						itemRow:set_Item(aresField, GetInnerXml(items[j], catalogField)[1]);
 					end
@@ -573,6 +591,14 @@ function DoItemImport()
 		SetFieldValue("Item", aresField, Cleanup(importItemRow:get_Item(aresField)));
 	end
 
+	if Settings.EResourceLinkField then
+		local eResourceGridColumn, eResourceAresField = Settings.EResourceLinkField:match(".+=(.+)=(.+)");
+
+		if importItemRow:get_Item("grid" .. eResourceGridColumn):find("https?://.+") then
+			SetFieldValue("Item", eResourceAresField, Cleanup(importItemRow:get_Item(eResourceAresField)));
+		end
+	end
+	
 	if Settings.KeepOriginalIsxn and NotNilOrBlank(originalIsxn) and originalIsxn ~= GetFieldValue("Item", "ISXN") then
 		SetFieldValue("Item", "ISXN", originalIsxn);
 	end
@@ -666,6 +692,7 @@ function GetInnerXml(xmlString, field)
 	local matches = {};
 	local silencedField = Silence(field);
 	for match in xmlString:gmatch("<" .. silencedField .. ">(.-)</" .. silencedField .. ">") do
+		log:Debug("Found a match: " .. match);
 		table.insert(matches, match);
 	end
 
