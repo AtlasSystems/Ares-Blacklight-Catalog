@@ -41,7 +41,7 @@ HostAppInfo.SourceFields["barcode"] = "ItemBarcode";
 -- with the name "DOCUMENTATION EXAMPLE":
 -- https://search.xxxxx.xxxxx.edu/catalog?utf8=%E2%9C%93&op=AND&all_fields_advanced=&title_advanced=&title_wildcard_advanced=&author_advanced=&subject_advanced=&title_series_advanced=&publisher_advanced=DOCUMENTATION+EXAMPLE&identifier_advanced=&call_number_advanced=
 -- In this example the field for publisher is "publisher_advanced."
-HostAppInfo.SearchFields["title"] = "title";
+HostAppInfo.SearchFields["title"] = "title_advanced";
 HostAppInfo.SearchFields["isxn"] = "identifier_advanced";
 HostAppInfo.SearchFields["barcode"] = "";
 HostAppInfo.SearchFields["callnumber"] = "call_number_advanced";
@@ -106,7 +106,6 @@ HostAppInfo.BibImportFields["editor"] = "Editor";
 HostAppInfo.BibImportFields["publisher"] = "Publisher";
 HostAppInfo.BibImportFields["publication_date"] = "PubDate";
 HostAppInfo.BibImportFields["issn"] = "ISXN";
-HostAppInfo.BibImportFields["barcode"] = "ItemBarcode";
 
 -- Holding-level fields to import. The key is the name of the catalog XML field, and the 
 -- value is the name of the Ares Item field to import to. Must be at the holding level in the 
@@ -116,7 +115,7 @@ HostAppInfo.HoldingImportFields["call_number"] = "CallNumber";
 -- Item-level fields to import. The key is the name of the catalog XML field, and the value is
 -- the name of the Ares Item field to import to. Must be at the item level in the catalog XML
 -- record. Fields can be added to this section or removed as desired.
-HostAppInfo.ItemImportFields["barcode"] = "Barcode";
+HostAppInfo.ItemImportFields["barcode"] = "ItemBarcode";
 
 -- Alternate statuses to display in the grid. For example, if you want to display a status of
 -- "Item on Shelf" as "Available" and other statuses as "Not Available." The key is the status

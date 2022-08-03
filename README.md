@@ -42,7 +42,7 @@ The bib-level catalog XML field and value that indicates a record can be accesse
 
 **EResourceLinkField (string)**
 
-The bib-level catalog XML field that contains the link for an electronic resource and the Ares field it should be imported to. Format is the XML field name and the Ares field separated by an =. Default: link=Location
+The bib-level catalog XML field that contains the link for an electronic resource and the Ares field it should be imported to. Format is the XML field name, grid column display name, and Ares field to import to each separated by a =. Both the column display name and Ares field can match item-level keys and values, respectively, in DataMapping. In the case that the column name matches a key in `ItemGridItemFields`, that column will contain the electronic resource URL only for the row added at the top for the electronic resource. If the Ares field matches a value in `ItemImportFields` the electronic resource URL will be imported into that field only when importing the row containing the URL; other rows will import the value of the XML catalog field configured in DataMapping. Default: link=Location=Location
 
 **CombinedImportFields (string)**
 
