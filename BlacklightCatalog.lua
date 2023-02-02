@@ -35,6 +35,7 @@ Types["System.Net.WebClient"] = luanet.import_type("System.Net.WebClient");
 Types["System.Net.WebUtility"] = luanet.import_type("System.Net.WebUtility");
 Types["System.Text.Encoding"] = luanet.import_type("System.Text.Encoding");
 Types["log4net.LogManager"] = luanet.import_type("log4net.LogManager");
+Types["Process"] = luanet.import_type("System.Diagnostics.Process");
 
 local log = Types["log4net.LogManager"].GetLogger("AtlasSystems.Addons.BlacklightCatalog");
 
@@ -52,8 +53,11 @@ Settings.KeepOriginalIsxn = GetSetting("KeepOriginalIsxn");
 Settings.EResourceIndicator = GetSetting("EResourceIndicator");
 Settings.EResourceLinkField = GetSetting("EResourceLinkField");
 Settings.CombinedImportFields = AtlasHelpers.StringSplit(",", GetSetting("CombinedImportFields"));
+Settings.ImportEntireWorkPages = GetSetting("ImportEntireWorkPages");
 Settings.DisplayInvalidSearchMessage = GetSetting("DisplayInvalidSearchMessage");
 Settings.RemoveTrailingSpecialCharacters = GetSetting("RemoveTrailingSpecialCharacters");
+
+local isEResource = false;
 
 function Init()
 	interfaceMngr = GetInterfaceManager();
@@ -221,6 +225,7 @@ function IsItemPage()
 
 	if isItem then
 		log:Debug("Is a record page.");
+		RegisterLocateRequestItemHandler();
 	else
 		log:Debug("Is not a record page.");
 	end
@@ -240,6 +245,32 @@ function ItemPageHandler()
 	log:Debug("ItemPageHandler called.");
 	-- Re-registering the handler enables the user to return to the search page and select another record if the selected record isn't a match or no copies are available.
 	RegisterItemPageHandler();
+end
+
+function RegisterLocateRequestItemHandler()
+	CatalogForm.Browser:RegisterPageHandler("custom", "IsLocateRequestItemAttempt", "LocateRequestItemHandler", true);
+end
+
+function IsLocateRequestItemAttempt()
+	if CatalogForm.Browser.Address:find(":services") then
+		return true;
+	else
+		return false;
+	end
+end
+
+function LocateRequestItemHandler()
+	log:Debug("LocateRequestItemHandler called.");
+	
+	local url = CatalogForm.Browser.Address;
+	CatalogForm.Browser:GoBack();
+
+	local process = Types["Process"]();
+	process.StartInfo.FileName = url;
+	process.StartInfo.UseShellExecute = true;
+	process:Start();
+
+	RegisterLocateRequestItemHandler();
 end
 
 function ToggleItemsUIElements(enabled)
@@ -402,6 +433,10 @@ function CreateBibTable()
 		bibTable.Columns:Add(aresField);
 	end
 
+	if Settings.ImportEntireWorkPages then
+		bibTable.Columns:Add("PagesEntireWork");
+	end
+
 	return bibTable;
 end
 
@@ -460,9 +495,17 @@ function BuildBibDataSource(xmlRecord)
 		bibRow:set_Item("grid" .. catalogField, GetInnerXml(xmlRecord, catalogField)[1]);
 	end
 	for catalogField, aresField in pairs(HostAppInfo.BibImportFields) do
+		log:Debug("~~~~~~ " .. aresField .. ": " .. tostring(GetInnerXml(xmlRecord, catalogField)[1]));
 		bibRow:set_Item(aresField, GetInnerXml(xmlRecord, catalogField)[1]);
+		log:Debug("returns: " .. tostring(Cleanup(bibRow:get_Item(aresField))));
 	end
 	
+	if Settings.ImportEntireWorkPages then
+		local pages = GetInnerXml(xmlRecord, "physical_description")[1]:match("(%d+)%s*[Pp]");
+
+		bibRow:set_Item("PagesEntireWork", pages);
+	end
+
 	bibTable.Rows:Add(bibRow);
 
 	return bibTable;
@@ -477,17 +520,20 @@ function BuildItemsDataSource(xmlRecord)
 	local bibDataTable = CreateBibTable();
 
 	if NotNilOrBlank(Settings.EResourceIndicator) then
-		local eResourceField, isEResource = Settings.EResourceIndicator:match("(.+)=(.+)");
+		local eResourceField, eResourceIndicator = Settings.EResourceIndicator:match("(.+)=(.+)");
 		local linkXmlField, gridColumnName, linkImportField = Settings.EResourceLinkField:match("(.+)=(.+)=(.+)");
 
-		if GetInnerXml(xmlRecord, eResourceField)[1] == isEResource then
-			log:Debug("Electronic resource found. Adding item row for URL.")
+		if GetInnerXml(xmlRecord, eResourceField)[1] == eResourceIndicator then
+			log:Debug("Electronic resource found. Adding item row for URL.");
+			isEResource = true;
 			local itemRow = itemsDataTable:NewRow();
 
 			itemRow:set_Item("grid" .. gridColumnName, GetInnerXml(xmlRecord, linkXmlField)[1]);
 			itemRow:set_Item(linkImportField, GetInnerXml(xmlRecord, linkXmlField)[1]);
 
 			itemsDataTable.Rows:Add(itemRow);
+		else
+			isEResource = false;
 		end
 	end
 	
@@ -589,7 +635,13 @@ function DoItemImport()
 
 	for i = 1, #Settings.CombinedImportFields do
 		local aresField = Settings.CombinedImportFields[i]:match(".+=.+=(.+)");
-		SetFieldValue("Item", aresField, Cleanup(importItemRow:get_Item(aresField)));
+
+		-- E-resources will not have item data beyond the URL, but we still want those fields to be cleared.
+		if not isEResource then
+			SetFieldValue("Item", aresField, Cleanup(importItemRow:get_Item(aresField)));
+		else
+			SetFieldValue("Item", aresField, nil);
+		end
 	end
 
 	if NotNilOrBlank(Settings.EResourceLinkField) then
@@ -599,9 +651,13 @@ function DoItemImport()
 			SetFieldValue("Item", aresField, Cleanup(importItemRow:get_Item(aresField)));
 		end
 	end
-	
+
 	if Settings.KeepOriginalIsxn and NotNilOrBlank(originalIsxn) and originalIsxn ~= GetFieldValue("Item", "ISXN") then
 		SetFieldValue("Item", "ISXN", originalIsxn);
+	end
+
+	if Settings.ImportEntireWorkPages then
+		SetFieldValue("Item", "PagesEntireWork", importBibRow:get_Item("PagesEntireWork"));
 	end
 	
 	log:Debug("Switching to the detail tab.");
@@ -667,7 +723,7 @@ end
 
 -- Performs character decoding and trimming on strings to be imported.
 function Cleanup(value)
-	value = tostring(SetNilToEmpty(value));
+	--value = tostring(SetNilToEmpty(value));
 
 	if not NotNilOrBlank(value) then
 		log:Debug("Value was nil or empty. Skipping string cleanup.");
