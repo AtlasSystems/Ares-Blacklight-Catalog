@@ -33,6 +33,7 @@ HostAppInfo.SourceFields["isxn"] = "ISXN";
 HostAppInfo.SourceFields["title"] = "Title";
 HostAppInfo.SourceFields["author"] = "Author";
 HostAppInfo.SourceFields["barcode"] = "ItemBarcode";
+HostAppInfo.SourceFields["callnumber"] = "CallNumber";
 
 -- Name of search fields in the query URL. The key is the search type and should not be 
 -- changed. The value is the name of the query field used in the URL built by Blacklight when 
@@ -82,6 +83,7 @@ HostAppInfo.CatalogLevels["Item"] = "item";
 -- the catalog XML record. Fields can be added to this section or removed as desired.
 HostAppInfo.BibGridFields["Title"] = "title";
 HostAppInfo.BibGridFields["Edition"] = "edition";
+HostAppInfo.BibGridFields["Total Pages"] = "physical_description";
 
 -- Holding-level fields to display in the item grid. The key is the column display name, and 
 -- the values are the corresponding catalog XML field. These values must be at the holding 
@@ -105,7 +107,7 @@ HostAppInfo.BibImportFields["edition"] = "Edition";
 HostAppInfo.BibImportFields["editor"] = "Editor";
 HostAppInfo.BibImportFields["publisher"] = "Publisher";
 HostAppInfo.BibImportFields["publication_date"] = "PubDate";
-HostAppInfo.BibImportFields["issn"] = "ISXN";
+HostAppInfo.BibImportFields["isbn"] = "ISXN";
 
 -- Holding-level fields to import. The key is the name of the catalog XML field, and the 
 -- value is the name of the Ares Item field to import to. Must be at the holding level in the 
