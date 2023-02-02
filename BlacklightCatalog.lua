@@ -495,9 +495,7 @@ function BuildBibDataSource(xmlRecord)
 		bibRow:set_Item("grid" .. catalogField, GetInnerXml(xmlRecord, catalogField)[1]);
 	end
 	for catalogField, aresField in pairs(HostAppInfo.BibImportFields) do
-		log:Debug("~~~~~~ " .. aresField .. ": " .. tostring(GetInnerXml(xmlRecord, catalogField)[1]));
 		bibRow:set_Item(aresField, GetInnerXml(xmlRecord, catalogField)[1]);
-		log:Debug("returns: " .. tostring(Cleanup(bibRow:get_Item(aresField))));
 	end
 	
 	if Settings.ImportEntireWorkPages then
