@@ -35,7 +35,6 @@ Types["System.Net.WebClient"] = luanet.import_type("System.Net.WebClient");
 Types["System.Net.WebUtility"] = luanet.import_type("System.Net.WebUtility");
 Types["System.Text.Encoding"] = luanet.import_type("System.Text.Encoding");
 Types["log4net.LogManager"] = luanet.import_type("log4net.LogManager");
-Types["Process"] = luanet.import_type("System.Diagnostics.Process");
 
 local log = Types["log4net.LogManager"].GetLogger("AtlasSystems.Addons.BlacklightCatalog");
 
@@ -265,7 +264,7 @@ function LocateRequestItemHandler()
 	local url = CatalogForm.Browser.Address;
 	CatalogForm.Browser:GoBack();
 
-	local process = Types["Process"]();
+	local process = Types["System.Diagnostics.Process"]();
 	process.StartInfo.FileName = url;
 	process.StartInfo.UseShellExecute = true;
 	process:Start();
