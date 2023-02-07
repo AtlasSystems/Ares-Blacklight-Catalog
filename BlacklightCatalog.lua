@@ -100,6 +100,9 @@ function Init()
 	
 	-- After we add all of our buttons and form elements, we can show the form.
 	CatalogForm.Form:Show();
+
+	RegisterItemPageHandler();
+	RegisterLocateRequestItemHandler();
 	
 	if Settings.AutoSearch then
 		AutoSearch();
@@ -194,7 +197,6 @@ function Search(queryString)
 	log:Debug("Complete search URL: "  .. completeUrl);
 
 	ToggleSearchButtons(false);
-	RegisterItemPageHandler();
 	CatalogForm.Browser:Navigate(completeUrl);
 	ToggleSearchButtons(true);
 end
@@ -224,7 +226,6 @@ function IsItemPage()
 
 	if isItem then
 		log:Debug("Is a record page.");
-		RegisterLocateRequestItemHandler();
 	else
 		log:Debug("Is not a record page.");
 	end
