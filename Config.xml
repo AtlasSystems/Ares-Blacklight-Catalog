@@ -2,7 +2,7 @@
 <Configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <Name>Ares Blacklight Catalog</Name>
   <Author>Atlas Systems, Inc.</Author>
-  <Version>1.0.2</Version>
+  <Version>1.1.0</Version>
   <Active>True</Active>
   <Type>Addon</Type>
   <Description>Searches the Blacklight catalog and imports citation information into Ares. See Readme for detailed configuration instructions.</Description>
@@ -35,7 +35,7 @@
       <Description>The bib-level catalog XML field that contains the link for an electronic resource and the Ares field it should be imported to. Format is the XML field name, grid column display name, and Ares field to import to each separated by a =. Both the column display name and Ares field can match item-level keys and values, respectively, in DataMapping. Default: link=Location=Location</Description>
     </Setting>
     <Setting name="CombinedImportFields" value="library=location=ShelfLocation" type="string">
-      <Description>A list of item-level XML fields that should be combined when importing and their corresponding Ares fields. Format is [first XML field]=[second XML field]=[Ares field] with each set separated by a comma. Fields will be concatenated with a space between them. Do not define these fields in the ItemImportFields table in DataMapping.lua. Default: library=location=ShelfLocation</Description>
+      <Description>A list of XML fields that should be combined when importing and their corresponding Ares fields. Format is [first XML field]=[second XML field]=[Ares field] with each set separated by a comma. Fields will be concatenated with a space between them. It is not necessary to add these fields as import fields in DataMapping.lua. Default: library=location=ShelfLocation</Description>
     </Setting>
     <Setting name="ImportEntireWorkPages" value="False" type="Boolean">
       <Description>Defines whether or not to import the number of pages to the Ares Entire Work Pages field from the physical_description XML field. Note that this only imports Arabic numerals designated as pages; it does not import Roman numeral values or values designated as leaves, reels, discs, etc. Default: False</Description>
