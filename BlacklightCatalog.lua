@@ -579,7 +579,9 @@ function BuildItemsDataSource(xmlRecord)
 					for k = 1, #Settings.CombinedImportFields do
 						local firstField, secondField, importField = Settings.CombinedImportFields[k]:match("(.+)=(.+)=(.+)");
 
-						local combinedFields = SetNilToEmpty(GetInnerXml(items[j], firstField)[1]) .. " " .. SetNilToEmpty(GetInnerXml(items[j], secondField)[1]);
+
+						-- This is a little messy.
+						local combinedFields = SetNilToEmpty(GetInnerXml(xmlRecord, firstField)[1] or GetInnerXml(holdings[i], firstField)[1] or GetInnerXml(items[j], firstField)[1]) .. " " .. SetNilToEmpty(GetInnerXml(xmlRecord, secondField)[1] or GetInnerXml(holdings[i], secondField)[1] or GetInnerXml(items[j], secondField)[1]);
 
 						if itemRow.Table.Columns:Contains(importField) then
 							itemRow:set_Item(importField, combinedFields);
