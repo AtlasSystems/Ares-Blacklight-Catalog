@@ -40,7 +40,6 @@ Types["System.Text.Encoding"] = luanet.import_type("System.Text.Encoding");
 Types["log4net.LogManager"] = luanet.import_type("log4net.LogManager");
 Types["System.Windows.Forms.Cursor"] = luanet.import_type("System.Windows.Forms.Cursor");
 Types["System.Xml.XmlDocument"] = luanet.import_type("System.Xml.XmlDocument");
-Types["System.Xml.XmlNamespaceManager"] = luanet.import_type("System.Xml.XmlNamespaceManager");
 
 local log = Types["log4net.LogManager"].GetLogger("AtlasSystems.Addons.BlacklightCatalog");
 
