@@ -17,16 +17,19 @@ CatalogForm.SearchButtons.CallNumber = nil;
 CatalogForm.EResourceLinkButton = nil;
 
 luanet.load_assembly("System");
+luanet.load_assembly("System.Xml");
 luanet.load_assembly("System.Data");
 luanet.load_assembly("System.Drawing");
 luanet.load_assembly("System.Windows.Forms");
 luanet.load_assembly("DevExpress.XtraBars");
+luanet.load_assembly("DevExpress.XtraGrid");
 luanet.load_assembly("log4net");
 
 local Types = {};
 Types["System.Data.DataTable"] = luanet.import_type("System.Data.DataTable");
 Types["System.Drawing.Size"] = luanet.import_type("System.Drawing.Size");
 Types["DevExpress.XtraBars.BarShortcut"] = luanet.import_type("DevExpress.XtraBars.BarShortcut");
+Types["DevExpress.XtraGrid.Views.Grid.ViewInfo.GridHitTest"] = luanet.import_type("DevExpress.XtraGrid.Views.Grid.ViewInfo.GridHitTest")
 Types["System.Windows.Forms.Shortcut"] = luanet.import_type("System.Windows.Forms.Shortcut");
 Types["System.Windows.Forms.Keys"] = luanet.import_type("System.Windows.Forms.Keys");
 Types["System.Diagnostics.Process"] = luanet.import_type("System.Diagnostics.Process");
@@ -35,6 +38,9 @@ Types["System.Net.WebClient"] = luanet.import_type("System.Net.WebClient");
 Types["System.Net.WebUtility"] = luanet.import_type("System.Net.WebUtility");
 Types["System.Text.Encoding"] = luanet.import_type("System.Text.Encoding");
 Types["log4net.LogManager"] = luanet.import_type("log4net.LogManager");
+Types["System.Windows.Forms.Cursor"] = luanet.import_type("System.Windows.Forms.Cursor");
+Types["System.Xml.XmlDocument"] = luanet.import_type("System.Xml.XmlDocument");
+Types["System.Xml.XmlNamespaceManager"] = luanet.import_type("System.Xml.XmlNamespaceManager");
 
 local log = Types["log4net.LogManager"].GetLogger("AtlasSystems.Addons.BlacklightCatalog");
 
@@ -57,6 +63,9 @@ Settings.DisplayInvalidSearchMessage = GetSetting("DisplayInvalidSearchMessage")
 Settings.RemoveTrailingSpecialCharacters = GetSetting("RemoveTrailingSpecialCharacters");
 
 local isEResource = false;
+local xmlRecordsCache = {};
+local itemsGridControl;
+local itemsGridView;
 
 function Init()
 	interfaceMngr = GetInterfaceManager();
@@ -65,7 +74,11 @@ function Init()
 	CatalogForm.Form = interfaceMngr:CreateForm("Blacklight", "Script");
 	
 	-- Add a browser
-	CatalogForm.Browser = CatalogForm.Form:CreateBrowser("Catalog", "Catalog", "Catalog", "Chromium");
+	if AddonInfo.Browsers and AddonInfo.Browsers.WebView2 then
+		CatalogForm.Browser = CatalogForm.Form:CreateBrowser("Catalog", "Catalog", "Catalog", "WebView2");
+	else
+		CatalogForm.Browser = CatalogForm.Form:CreateBrowser("Catalog", "Catalog", "Catalog", "Chromium");
+	end
 	
 	-- Hide the text label
 	CatalogForm.Browser.TextSize = Types["System.Drawing.Size"].Empty;
@@ -215,14 +228,14 @@ function IsItemPage()
 			for (let link of aCollection){
 				// A "Back to search" link should be indicative of an item page.
 				if (link.innerText.toLowerCase() == "back to search"){
-					return true;
+					return "True";
 				}
 			}
-			return false;
+			return "False";
 		})();
 	]];
 
-	local isItem = CatalogForm.Browser:EvaluateScript(isItemScript).Result;
+	local isItem = CatalogForm.Browser:EvaluateScript(isItemScript).Result == "True";
 
 	if isItem then
 		log:Debug("Is a record page.");
@@ -340,12 +353,12 @@ function BuildItemsGrid()
 	CatalogForm.ItemsGrid.TextVisible = false;
 	CatalogForm.ItemsGrid.GridControl.Enabled = false;
 	
-	local itemsGridControl = CatalogForm.ItemsGrid.GridControl;
+	itemsGridControl = CatalogForm.ItemsGrid.GridControl;
 	
 	itemsGridControl:BeginUpdate();
 
 	-- Set the grid view options
-	local itemsGridView = itemsGridControl.MainView;
+	itemsGridView = itemsGridControl.MainView;
 	itemsGridView.OptionsView.ShowIndicator = false;
 	itemsGridView.OptionsView.ShowGroupPanel = false;
 	itemsGridView.OptionsView.RowAutoHeight = true;
@@ -380,6 +393,7 @@ function BuildItemsGrid()
 	itemsGridControl:EndUpdate();
 	
 	itemsGridView:add_FocusedRowChanged(GridFocusedRowChanged);
+	itemsGridView:add_DoubleClick(GridRowDoubleClicked);
 end
 
 function GridFocusedRowChanged(sender, args)
@@ -402,10 +416,26 @@ function GridFocusedRowChanged(sender, args)
 	end
 end
 
+function GridRowDoubleClicked(sender, args)
+	local gridHitInfo = itemsGridView:CalcHitInfo(itemsGridControl:PointToClient(Types["System.Windows.Forms.Cursor"].Position));
+
+	if gridHitInfo.HitTest == Types["DevExpress.XtraGrid.Views.Grid.ViewInfo.GridHitTest"].RowCell then
+		DoItemImport();
+	end
+end
+
 function RetrieveItems()
 	log:Debug("Retrieving items");
 
-	local xmlRecord = DownloadString(tostring(CatalogForm.Browser.Address) .. ".xml");
+	local xmlRecordUrl = CatalogForm.Browser.Address .. ".xml";
+
+	-- Cache XML catalog record by URL if it hasn't been already.
+	if not xmlRecordsCache[xmlRecordUrl] then
+        xmlRecordsCache[xmlRecordUrl] = DownloadString(xmlRecordUrl);
+    end
+
+	local xmlRecord = Types["System.Xml.XmlDocument"]();
+    xmlRecord:LoadXml(xmlRecordsCache[xmlRecordUrl]);
 
 	CatalogForm.BibGrid.GridControl.MainView:BeginDataUpdate();
 	CatalogForm.ItemsGrid.GridControl.MainView:BeginDataUpdate();
@@ -430,7 +460,10 @@ function CreateBibTable()
 	end
 
 	for catalogField, aresField in pairs(HostAppInfo.BibImportFields) do
-		bibTable.Columns:Add(aresField);
+		-- Check if column already exists, since things like ISBN and ISSN may import to the same column.
+		if not bibTable.Columns:Contains(aresField) then
+			bibTable.Columns:Add(aresField);
+		end
 	end
 
 	if Settings.ImportEntireWorkPages then
@@ -451,10 +484,14 @@ function CreateItemsTable()
 	end
 
 	for catalogField, aresField in pairs(HostAppInfo.HoldingImportFields) do
-		itemsTable.Columns:Add(aresField);
+		if not itemsTable.Columns:Contains(aresField) then
+			itemsTable.Columns:Add(aresField);
+		end
 	end
 	for catalogField, aresField in pairs(HostAppInfo.ItemImportFields) do
-		itemsTable.Columns:Add(aresField);
+		if not itemsTable.Columns:Contains(aresField) then
+			itemsTable.Columns:Add(aresField);
+		end
 	end
 
 	if NotNilOrBlank(Settings.EResourceLinkField) then
@@ -492,14 +529,14 @@ function BuildBibDataSource(xmlRecord)
 	local bibRow = bibTable:NewRow();
 
 	for caption, catalogField in pairs(HostAppInfo.BibGridFields) do
-		bibRow:set_Item("grid" .. catalogField, GetInnerXml(xmlRecord, catalogField)[1]);
+		bibRow:set_Item("grid" .. catalogField, GetInnerText(xmlRecord, catalogField));
 	end
 	for catalogField, aresField in pairs(HostAppInfo.BibImportFields) do
-		bibRow:set_Item(aresField, GetInnerXml(xmlRecord, catalogField)[1]);
+		bibRow:set_Item(aresField, GetInnerText(xmlRecord, catalogField));
 	end
 	
 	if Settings.ImportEntireWorkPages then
-		local pages = GetInnerXml(xmlRecord, "physical_description")[1]:match("(%d+)%s*[Pp]");
+		local pages = GetInnerText(xmlRecord, "physical_description"):match("(%d+)%s*[Pp]");
 
 		bibRow:set_Item("PagesEntireWork", pages);
 	end
@@ -512,7 +549,9 @@ end
 function BuildItemsDataSource(xmlRecord)
 	log:Debug("Building ItemsDataSource.");
 
-	local holdings = GetInnerXml(xmlRecord, HostAppInfo.CatalogLevels["Holding"]);
+	local holdings = xmlRecord:SelectNodes("//" .. HostAppInfo.CatalogLevels["Holding"]);
+
+	log:Info("Found " .. holdings.Count .. " holdings.");
 
 	local itemsDataTable = CreateItemsTable();
 	local bibDataTable = CreateBibTable();
@@ -521,13 +560,13 @@ function BuildItemsDataSource(xmlRecord)
 		local eResourceField, eResourceIndicator = Settings.EResourceIndicator:match("(.+)=(.+)");
 		local linkXmlField, gridColumnName, linkImportField = Settings.EResourceLinkField:match("(.+)=(.+)=(.+)");
 
-		if GetInnerXml(xmlRecord, eResourceField)[1] == eResourceIndicator then
+		if GetInnerText(xmlRecord, eResourceField) == eResourceIndicator then
 			log:Debug("Electronic resource found. Adding item row for URL.");
 			isEResource = true;
 			local itemRow = itemsDataTable:NewRow();
 
-			itemRow:set_Item("grid" .. gridColumnName, GetInnerXml(xmlRecord, linkXmlField)[1]);
-			itemRow:set_Item(linkImportField, GetInnerXml(xmlRecord, linkXmlField)[1]);
+			itemRow:set_Item("grid" .. gridColumnName, GetInnerText(xmlRecord, linkXmlField));
+			itemRow:set_Item(linkImportField, GetInnerText(xmlRecord, linkXmlField));
 
 			itemsDataTable.Rows:Add(itemRow);
 		else
@@ -535,79 +574,109 @@ function BuildItemsDataSource(xmlRecord)
 		end
 	end
 	
-	if #holdings > 0 then
-		for i = 1, #holdings do
+	local holdingsEnumerator = holdings:GetEnumerator();
 
-			local items = GetInnerXml(holdings[i], HostAppInfo.CatalogLevels["Item"]);
+	while holdingsEnumerator:MoveNext() do
+		local currentHolding = holdingsEnumerator.Current;
 
-			if #items > 0 then
-				
-				for j = 1, #items do
-					local itemRow = itemsDataTable:NewRow();
-					local bibRow = bibDataTable:NewRow();
+		local items = currentHolding:SelectNodes("//" .. HostAppInfo.CatalogLevels["Item"]);
 
-					for catalogField, aresField in pairs(HostAppInfo.BibImportFields) do
-						bibRow:set_Item(aresField, GetInnerXml(xmlRecord, catalogField)[1]);
-					end
+		log:Info("Found " .. items.Count .. " items.");
 
-					for caption, catalogField in pairs(HostAppInfo.ItemGridHoldingFields) do
-						itemRow:set_Item("grid" .. catalogField, GetInnerXml(holdings[i], catalogField)[1]);
-					end
+		local itemsEnumerator = items:GetEnumerator();
+			
+		while itemsEnumerator:MoveNext() do
+			local currentItem = itemsEnumerator.Current;
+			local itemRow = itemsDataTable:NewRow();
+			local bibRow = bibDataTable:NewRow();
 
-					for catalogField, aresField in pairs(HostAppInfo.HoldingImportFields) do
-						itemRow:set_Item(aresField, GetInnerXml(holdings[i], catalogField)[1]);
-					end
-		
-					for caption, catalogField in pairs(HostAppInfo.ItemGridItemFields) do
-						if catalogField == "status" then
-							for catalogStatus, statusReplacement in pairs(HostAppInfo.DisplayStatuses) do
-								if GetInnerXml(items[j], catalogField)[1] == catalogStatus then
-									itemRow:set_Item("grid" .. catalogField, statusReplacement);
-								else
-									itemRow:set_Item("grid" .. catalogField, GetInnerXml(items[j], catalogField)[1]);
-								end
-							end
+			for catalogField, aresField in pairs(HostAppInfo.BibImportFields) do
+				bibRow:set_Item(aresField, GetInnerText(xmlRecord, catalogField));
+			end
+
+			for caption, catalogField in pairs(HostAppInfo.ItemGridHoldingFields) do
+				itemRow:set_Item("grid" .. catalogField, GetInnerText(currentHolding, catalogField));
+			end
+
+			for catalogField, aresField in pairs(HostAppInfo.HoldingImportFields) do
+				itemRow:set_Item(aresField, GetInnerText(currentHolding, catalogField));
+			end
+
+			for caption, catalogField in pairs(HostAppInfo.ItemGridItemFields) do
+				if catalogField == "status" then
+					for catalogStatus, statusReplacement in pairs(HostAppInfo.DisplayStatuses) do
+						if GetInnerText(currentItem, catalogField) == catalogStatus then
+							itemRow:set_Item("grid" .. catalogField, statusReplacement);
 						else
-							itemRow:set_Item("grid" .. catalogField, GetInnerXml(items[j], catalogField)[1]);
+							itemRow:set_Item("grid" .. catalogField, GetInnerText(currentItem, catalogField));
 						end
 					end
-
-					for catalogField, aresField in pairs(HostAppInfo.ItemImportFields) do
-						itemRow:set_Item(aresField, GetInnerXml(items[j], catalogField)[1]);
-					end
-
-					for k = 1, #Settings.CombinedImportFields do
-						local firstField, secondField, importField = Settings.CombinedImportFields[k]:match("(.+)=(.+)=(.+)");
-
-
-						-- This is a little messy.
-						local combinedFields = SetNilToEmpty(GetInnerXml(xmlRecord, firstField)[1] or GetInnerXml(holdings[i], firstField)[1] or GetInnerXml(items[j], firstField)[1]) .. " " .. SetNilToEmpty(GetInnerXml(xmlRecord, secondField)[1] or GetInnerXml(holdings[i], secondField)[1] or GetInnerXml(items[j], secondField)[1]);
-
-						if itemRow.Table.Columns:Contains(importField) then
-							itemRow:set_Item(importField, combinedFields);
-						else
-							-- Create column if it doesn't already exist.
-							itemsDataTable.Columns:Add(importField);
-							itemRow:set_Item(importField, combinedFields);
-						end
-					end
-
-					itemsDataTable.Rows:Add(itemRow);
-					bibDataTable.Rows:Add(bibRow);
+				else
+					itemRow:set_Item("grid" .. catalogField, GetInnerText(currentItem, catalogField));
 				end
 			end
 
+			for catalogField, aresField in pairs(HostAppInfo.ItemImportFields) do
+				itemRow:set_Item(aresField, GetInnerText(currentItem, catalogField));
+			end
+
+			for k = 1, #Settings.CombinedImportFields do
+				local firstField, secondField, importField = Settings.CombinedImportFields[k]:match("(.+)=(.+)=(.+)");
+
+				log:Info("Combining " .. firstField .. " and " .. secondField .. " to import into " .. importField .. ".");
+
+				local bibOnlyXml = GetBibOnlyXml(xmlRecord);
+				local holdingOnlyXml = GetHoldingOnlyXml(currentHolding);
+
+				local firstFoundField = GetInnerText(bibOnlyXml, firstField) or GetInnerText(holdingOnlyXml, firstField) or GetInnerText(currentItem, firstField);
+				local secondFoundField = GetInnerText(bibOnlyXml, secondField) or GetInnerText(holdingOnlyXml, secondField) or GetInnerText(currentItem, secondField);
+
+				local combinedFields;
+				if firstFoundField and secondFoundField then
+					combinedFields = firstFoundField .. " " .. secondFoundField;
+				end
+
+				if itemRow.Table.Columns:Contains(importField) then
+					-- Only set the field if it doesn't contain a value.
+					if type(itemRow:get_Item(importField)) ~= "string" then
+						itemRow:set_Item(importField, combinedFields);
+					end
+				else
+					-- Create column if it doesn't already exist.
+					itemsDataTable.Columns:Add(importField);
+					itemRow:set_Item(importField, combinedFields);
+				end
+			end
+
+			itemsDataTable.Rows:Add(itemRow);
+			bibDataTable.Rows:Add(bibRow);
 		end
+
 	end
 
 	return itemsDataTable;
 end
 
+function GetBibOnlyXml(xmlNode)
+	local clonedDocument = xmlNode:Clone();
+	local bibOnlyXml = clonedDocument:SelectSingleNode("document");
+
+	bibOnlyXml:RemoveChild(bibOnlyXml:SelectSingleNode(HostAppInfo.CatalogLevels["Holdings"]));
+
+	return bibOnlyXml;
+end
+
+function GetHoldingOnlyXml(xmlNode)
+	local holdingOnlyXml = xmlNode:Clone();
+
+	holdingOnlyXml:RemoveChild(holdingOnlyXml:SelectSingleNode(HostAppInfo.CatalogLevels["Items"]));
+
+	return holdingOnlyXml;
+end
 
 function DoItemImport()
 	log:Debug("Performing Import");
 	
-	log:Debug("Retrieving import rows.");
 	local importItemRow = CatalogForm.ItemsGrid.GridControl.MainView:GetFocusedRow();
 	local importBibRow = CatalogForm.BibGrid.GridControl.MainView:GetFocusedRow();
 	
@@ -678,6 +747,32 @@ function OpenEResourceLink()
 	process:Start();
 end
 
+function GetInnerText(xmlNode, field)
+	if xmlNode then
+		log:Debug("Getting InnerText of field " .. field .. " in: " .. tostring(xmlNode.OuterXml));
+	else
+		return nil;
+	end
+
+	local xPathSelector;
+
+	-- For nodes derived from xmlRecord, we want to select only the current node.
+	if xmlNode.ParentNode then
+		xPathSelector = "./";
+	else
+		xPathSelector = "//";
+	end
+
+	log:Debug("xPath expression: " .. tostring(xPathSelector .. field));
+	local matchingNode = xmlNode:SelectNodes(xPathSelector .. field);
+
+	if matchingNode.Count > 0 then
+		return matchingNode:Item(0).InnerText;
+	else
+		return nil;
+	end
+end
+
 function SetNilToEmpty(value)
 	if value == nil or value == Types["System.DBNull"].Value then
 		value = "";
@@ -723,8 +818,6 @@ end
 
 -- Performs character decoding and trimming on strings to be imported.
 function Cleanup(value)
-	--value = tostring(SetNilToEmpty(value));
-
 	if not NotNilOrBlank(value) then
 		log:Debug("Value was nil or empty. Skipping string cleanup.");
         return value;
@@ -742,21 +835,22 @@ function Cleanup(value)
 	return value;
 end
 
-function GetInnerXml(xmlString, field)
-	log:Debug("Getting innerXML of " .. tostring(field));
-	log:Debug("XML: " .. tostring(xmlString));
-	
-	local matches = {};
-	local silencedField = Silence(field);
-	for match in xmlString:gmatch("<" .. silencedField .. ">(.-)</" .. silencedField .. ">") do
-		log:Debug("Found a match: " .. match);
-		table.insert(matches, match);
-	end
+function TraverseError(e)
+    if not e.GetType then
+        -- Not a .NET type
+        return e;
+    else
+        if not e.Message then
+            -- Not a .NET exception
+            return e;
+        end
+    end
 
-	return matches;
-end
+    log:Debug(e.Message);
 
-function Silence(str) -- Allows variables with Lua magic characters to be used as a matchstring.
-		str = str:gsub("%%", "%%%%"):gsub("%(", "%%("):gsub("%)", "%%)"):gsub("%.", "%%."):gsub("%+", "%%+"):gsub("%-", "%%-"):gsub("%*", "%%*"):gsub("%?", "%%?"):gsub("%[", "%%["):gsub("%^", "%%^"):gsub("%$", "%%$");
-	return str;
+    if e.InnerException then
+        return TraverseError(e.InnerException);
+    else
+        return e.Message;
+    end
 end
