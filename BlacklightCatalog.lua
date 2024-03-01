@@ -439,8 +439,19 @@ function RetrieveItems()
 	CatalogForm.BibGrid.GridControl.MainView:BeginDataUpdate();
 	CatalogForm.ItemsGrid.GridControl.MainView:BeginDataUpdate();
 
-	CatalogForm.BibGrid.GridControl.DataSource = BuildBibDataSource(xmlRecord);
-	CatalogForm.ItemsGrid.GridControl.DataSource = BuildItemsDataSource(xmlRecord);
+	local bibSuccess, bibErr = pcall(function()
+		CatalogForm.BibGrid.GridControl.DataSource = BuildBibDataSource(xmlRecord);
+	end);
+	if not bibSuccess then
+		log:Error("Problem encountered while building the bib datasource. Error details:\n" .. TraverseError(bibErr));
+	end
+
+	local itemsSuccess, itemsErr = pcall(function()
+		CatalogForm.ItemsGrid.GridControl.DataSource = BuildItemsDataSource(xmlRecord);
+	end);
+	if not itemsSuccess then
+		log:Error("Problem encountered while building the items datasource. Error details:\n" .. TraverseError(itemsErr));
+	end
 
 	CatalogForm.BibGrid.GridControl.MainView:EndDataUpdate();
 	CatalogForm.ItemsGrid.GridControl.MainView:EndDataUpdate();
