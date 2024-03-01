@@ -74,8 +74,11 @@ HostAppInfo.SearchFields["callnumber"] = "call_number_advanced";
             </item>
 --]]
 -- In this example of a partial XML record, the field names we're looking for are 
--- "physical_holding" for the holding level and "item" for the item level.
+-- "physical_holdings" for the holding level and "items" for the item level. 
+-- "holding" and "item" are for the individual holdings and items at each level, respectively.
+HostAppInfo.CatalogLevels["Holdings"] = "physical_holdings";
 HostAppInfo.CatalogLevels["Holding"] = "physical_holding";
+HostAppInfo.CatalogLevels["Items"] = "items";
 HostAppInfo.CatalogLevels["Item"] = "item";
 
 -- Bib-level fields to display in the bib grid. The key is the column display name, and the 
@@ -108,11 +111,12 @@ HostAppInfo.BibImportFields["editor"] = "Editor";
 HostAppInfo.BibImportFields["publisher"] = "Publisher";
 HostAppInfo.BibImportFields["publication_date"] = "PubDate";
 HostAppInfo.BibImportFields["isbn"] = "ISXN";
+HostAppInfo.BibImportFields["issn"] = "ISXN";
 
 -- Holding-level fields to import. The key is the name of the catalog XML field, and the 
 -- value is the name of the Ares Item field to import to. Must be at the holding level in the 
 -- catalog XML record. Fields can be added to this section or removed as desired.
-HostAppInfo.HoldingImportFields["call_number"] = "CallNumber";
+--HostAppInfo.HoldingImportFields["call_number"] = "CallNumber";
 
 -- Item-level fields to import. The key is the name of the catalog XML field, and the value is
 -- the name of the Ares Item field to import to. Must be at the item level in the catalog XML
