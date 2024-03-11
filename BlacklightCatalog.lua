@@ -444,6 +444,9 @@ function RetrieveItems()
 	end);
 	if not bibSuccess then
 		log:Error("Problem encountered while building the bib datasource. Error details:\n" .. TraverseError(bibErr));
+		CatalogForm.BibGrid.GridControl.MainView:EndDataUpdate();
+		CatalogForm.ItemsGrid.GridControl.MainView:EndDataUpdate();
+		return;
 	end
 
 	local itemsSuccess, itemsErr = pcall(function()
@@ -451,6 +454,9 @@ function RetrieveItems()
 	end);
 	if not itemsSuccess then
 		log:Error("Problem encountered while building the items datasource. Error details:\n" .. TraverseError(itemsErr));
+		CatalogForm.BibGrid.GridControl.MainView:EndDataUpdate();
+		CatalogForm.ItemsGrid.GridControl.MainView:EndDataUpdate();
+		return;
 	end
 
 	CatalogForm.BibGrid.GridControl.MainView:EndDataUpdate();
@@ -539,10 +545,10 @@ function BuildBibDataSource(xmlRecord)
 	local bibRow = bibTable:NewRow();
 
 	for caption, catalogField in pairs(HostAppInfo.BibGridFields) do
-		bibRow:set_Item("grid" .. catalogField, GetInnerText(xmlRecord, catalogField));
+		SetColumnValueIfNotNull(bibRow, xmlRecord, nil, catalogField);
 	end
 	for catalogField, aresField in pairs(HostAppInfo.BibImportFields) do
-		bibRow:set_Item(aresField, GetInnerText(xmlRecord, catalogField));
+		SetColumnValueIfNotNull(bibRow, xmlRecord, aresField, catalogField);
 	end
 	
 	if Settings.ImportEntireWorkPages then
@@ -600,16 +606,16 @@ function BuildItemsDataSource(xmlRecord)
 			local itemRow = itemsDataTable:NewRow();
 			local bibRow = bibDataTable:NewRow();
 
-			for catalogField, aresField in pairs(HostAppInfo.BibImportFields) do
-				bibRow:set_Item(aresField, GetInnerText(xmlRecord, catalogField));
-			end
+			-- for catalogField, aresField in pairs(HostAppInfo.BibImportFields) do
+			-- 	SetColumnValueIfNotNull(bibRow, xmlRecord, aresField, catalogField);
+			-- end
 
 			for caption, catalogField in pairs(HostAppInfo.ItemGridHoldingFields) do
-				itemRow:set_Item("grid" .. catalogField, GetInnerText(currentHolding, catalogField));
+				SetColumnValueIfNotNull(itemRow, currentHolding, nil, catalogField);
 			end
 
 			for catalogField, aresField in pairs(HostAppInfo.HoldingImportFields) do
-				itemRow:set_Item(aresField, GetInnerText(currentHolding, catalogField));
+				SetColumnValueIfNotNull(itemRow, currentHolding, aresField, catalogField);
 			end
 
 			for caption, catalogField in pairs(HostAppInfo.ItemGridItemFields) do
@@ -618,16 +624,16 @@ function BuildItemsDataSource(xmlRecord)
 						if GetInnerText(currentItem, catalogField) == catalogStatus then
 							itemRow:set_Item("grid" .. catalogField, statusReplacement);
 						else
-							itemRow:set_Item("grid" .. catalogField, GetInnerText(currentItem, catalogField));
+							SetColumnValueIfNotNull(itemRow, currentItem, nil, catalogField);
 						end
 					end
 				else
-					itemRow:set_Item("grid" .. catalogField, GetInnerText(currentItem, catalogField));
+					SetColumnValueIfNotNull(itemRow, currentItem, nil, catalogField);
 				end
 			end
 
 			for catalogField, aresField in pairs(HostAppInfo.ItemImportFields) do
-				itemRow:set_Item(aresField, GetInnerText(currentItem, catalogField));
+				SetColumnValueIfNotNull(itemRow, currentItem, aresField, catalogField);
 			end
 
 			for k = 1, #Settings.CombinedImportFields do
@@ -644,17 +650,14 @@ function BuildItemsDataSource(xmlRecord)
 				local combinedFields;
 				if firstFoundField and secondFoundField then
 					combinedFields = firstFoundField .. " " .. secondFoundField;
-				end
 
-				if itemRow.Table.Columns:Contains(importField) then
-					-- Only set the field if it doesn't contain a value.
-					if type(itemRow:get_Item(importField)) ~= "string" then
+					if itemRow.Table.Columns:Contains(importField) then
+						itemRow:set_Item(importField, combinedFields);
+					else
+						-- Create column if it doesn't already exist.
+						itemsDataTable.Columns:Add(importField);
 						itemRow:set_Item(importField, combinedFields);
 					end
-				else
-					-- Create column if it doesn't already exist.
-					itemsDataTable.Columns:Add(importField);
-					itemRow:set_Item(importField, combinedFields);
 				end
 			end
 
@@ -665,6 +668,17 @@ function BuildItemsDataSource(xmlRecord)
 	end
 
 	return itemsDataTable;
+end
+
+function SetColumnValueIfNotNull(dataRow, xmlNode, aresField, catalogField)
+	local fieldValue = GetInnerText(xmlNode, catalogField);
+	if fieldValue then
+		if aresField then
+			dataRow:set_Item(aresField, fieldValue);
+		else
+			dataRow:set_Item("grid" .. catalogField, fieldValue);
+		end
+	end
 end
 
 function GetBibOnlyXml(xmlNode)
@@ -776,7 +790,7 @@ function GetInnerText(xmlNode, field)
 	log:Debug("xPath expression: " .. tostring(xPathSelector .. field));
 	local matchingNode = xmlNode:SelectNodes(xPathSelector .. field);
 
-	if matchingNode.Count > 0 then
+	if matchingNode.Count > 0 and matchingNode:Item(0).InnerText ~= "" then
 		return matchingNode:Item(0).InnerText;
 	else
 		return nil;
