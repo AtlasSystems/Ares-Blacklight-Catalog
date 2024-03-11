@@ -116,7 +116,7 @@ HostAppInfo.BibImportFields["issn"] = "ISXN";
 -- Holding-level fields to import. The key is the name of the catalog XML field, and the 
 -- value is the name of the Ares Item field to import to. Must be at the holding level in the 
 -- catalog XML record. Fields can be added to this section or removed as desired.
---HostAppInfo.HoldingImportFields["call_number"] = "CallNumber";
+HostAppInfo.HoldingImportFields["call_number"] = "CallNumber";
 
 -- Item-level fields to import. The key is the name of the catalog XML field, and the value is
 -- the name of the Ares Item field to import to. Must be at the item level in the catalog XML

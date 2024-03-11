@@ -46,7 +46,7 @@ The bib-level catalog XML field that contains the link for an electronic resourc
 
 **CombinedImportFields (string)**
 
-A list of XML fields that should be combined when importing and their corresponding Ares fields. Format is [first XML field]=[second XML field]=[Ares field] with each set separated by a comma. Fields will be concatenated with a space between them. It is not necessary to add these fields as import fields in DataMapping.lua. Default: library=location=ShelfLocation
+A list of XML fields that should be combined when importing and their corresponding Ares fields. Format is [first XML field]=[second XML field]=[Ares field] with each set separated by a comma. Fields will be concatenated with a space between them. These fields should be added to DataMapping.lua if you still want to import the individual fields when one or the other has no value. Default: library=location=ShelfLocation
 
 **DisplayInvalidSearchMessage (Boolean)**
 
