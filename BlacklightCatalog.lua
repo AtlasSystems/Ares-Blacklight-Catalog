@@ -110,7 +110,7 @@ function Init()
 	BuildBibGrid();
 	BuildItemsGrid();
 	
-	CatalogForm.Form:LoadLayout("layout" .. browserType .. ".xml");
+	CatalogForm.Form:LoadLayout("layout_" .. browserType .. ".xml");
 	
 	-- After we add all of our buttons and form elements, we can show the form.
 	CatalogForm.Form:Show();
