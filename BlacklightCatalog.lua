@@ -65,6 +65,7 @@ local isEResource = false;
 local xmlRecordsCache = {};
 local itemsGridControl;
 local itemsGridView;
+local browserType;
 
 function Init()
 	interfaceMngr = GetInterfaceManager();
@@ -74,10 +75,11 @@ function Init()
 	
 	-- Add a browser
 	if AddonInfo.Browsers and AddonInfo.Browsers.WebView2 then
-		CatalogForm.Browser = CatalogForm.Form:CreateBrowser("Catalog", "Catalog", "Catalog", "WebView2");
+		browserType = "WebView2";
 	else
-		CatalogForm.Browser = CatalogForm.Form:CreateBrowser("Catalog", "Catalog", "Catalog", "Chromium");
+		browserType = "Chromium";
 	end
+	CatalogForm.Browser = CatalogForm.Form:CreateBrowser("Catalog", "Catalog", "Catalog", browserType);
 	
 	-- Hide the text label
 	CatalogForm.Browser.TextSize = Types["System.Drawing.Size"].Empty;
@@ -108,7 +110,7 @@ function Init()
 	BuildBibGrid();
 	BuildItemsGrid();
 	
-	CatalogForm.Form:LoadLayout("layout.xml");
+	CatalogForm.Form:LoadLayout("layout" .. browserType .. ".xml");
 	
 	-- After we add all of our buttons and form elements, we can show the form.
 	CatalogForm.Form:Show();
