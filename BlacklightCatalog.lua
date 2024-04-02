@@ -554,7 +554,12 @@ function BuildBibDataSource(xmlRecord)
 	end
 	
 	if Settings.ImportEntireWorkPages then
-		local pages = GetInnerText(xmlRecord, "physical_description"):match("(%d+)%s*[Pp]");
+		local physicalDescription = GetInnerText(xmlRecord, "physical_description");
+		local pages;
+
+		if physicalDescription then
+			pages = physicalDescription:match("(%d+)%s*[Pp]");
+		end
 
 		bibRow:set_Item("PagesEntireWork", pages);
 	end
